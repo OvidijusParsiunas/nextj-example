@@ -25,7 +25,7 @@ export default function IndexPage() {
               https://deepchat.dev/docs/interceptors */}
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
-              introMessage="Send a chat message to an example server. "
+              introMessage="Send a chat message to NestJS backend. "
               request={{url: '/api/basic/chat'}}
               requestInterceptor={(details: {body: any; headers?: {[key: string]: string}}) => {
                 console.log(details);
@@ -38,13 +38,13 @@ export default function IndexPage() {
             />
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
-              introMessage="Send a streamed chat message to an example server."
+              introMessage="Send a streamed chat message to NestJS backend."
               request={{url: '/api/basic/chat-stream'}}
               stream={true}
             />
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
-              introMessage="Send files to an example server."
+              introMessage="Send files to NestJS backend."
               request={{url: '/api/basic/files'}}
               audio={true}
               images={true}
@@ -67,18 +67,18 @@ export default function IndexPage() {
               https://deepchat.dev/docs/connect#request */}
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
-              introMessage="Send a chat message through an example server to OpenAI. "
+              introMessage="Send a chat message through NestJS backend to OpenAI. "
               request={{url: '/api/openai-chat', additionalBodyProps: {model: 'gpt-3.5-turbo'}}}
             />
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
-              introMessage="Send a streamed chat message through an example server to OpenAI."
+              introMessage="Send a streamed chat message through NestJS backend to OpenAI."
               request={{url: '/api/openai-chat-stream', additionalBodyProps: {model: 'gpt-3.5-turbo'}}}
               stream={true}
             />
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
-              introMessage="Send a 1024x1024 .png image through an example server to OpenAI and generate its variation."
+              introMessage="Send a 1024x1024 .png image through NestJS backend to OpenAI and generate its variation."
               request={{url: '/api/openai-image'}}
               images={{files: {maxNumberOfFiles: 1, acceptedFormats: '.png'}}}
               requestBodyMessageLimits={{maxMessages: 1}}
