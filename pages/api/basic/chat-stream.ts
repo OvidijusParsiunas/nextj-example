@@ -10,25 +10,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       'Cache-Control': 'no-cache, no-transform',
       'Content-Type': 'text/event-stream',
     });
-    const responseChunks = 'This is a respone from a NextJS server. Thankyou for your message!'.split(' ');
-    sendStream(res, responseChunks);
+
+    const responseChunks = 'This is a response from a NextJS server. Thank you for your message!'.split(' ');
+
+    const startTime = Date.now();
+    sendStream(res, responseChunks, startTime);
   } catch (err) {
     console.log('>>>>>>>>>>>>>> STRIPE SEND MESSAGE : ERROR >>>>>>>>>>>>>>>>>>');
     console.log(JSON.stringify(err));
     throw err;
   }
 
-  function sendStream(res: NextApiResponse, responseChunks: string[], chunkIndex = 0) {
-    setTimeout(() => {
+  function sendStream(res: NextApiResponse, responseChunks: string[], startTime: number) {
+    const currentTime = Date.now();
+    const elapsedTime = currentTime - startTime;
+    const chunkIndex = Math.floor(elapsedTime / 70);
+
+    if (chunkIndex < responseChunks.length) {
       const chunk = responseChunks[chunkIndex];
-      if (chunk) {
-        // sends response back to Deep Chat using the Result format:
-        // https://deepchat.dev/docs/connect/#Result
-        res.write(`data: ${JSON.stringify({result: {text: `${chunk} `}})}\n\n`);
-        sendStream(res, responseChunks, chunkIndex + 1);
-      } else {
-        res.end();
-      }
-    }, 70);
+      res.write(`data: ${JSON.stringify({ result: { text: `${chunk} ` } })}\n\n`);
+
+      setTimeout(() => {
+        sendStream(res, responseChunks, startTime);
+      }, 70);
+    } else {
+      res.end();
+    }
   }
 }
