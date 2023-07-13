@@ -53,9 +53,6 @@ export default function IndexPage() {
               microphone={true}
               mixedFiles={true}
               textInput={{placeholder: {text: 'Send a file!'}}}
-              validateMessageBeforeSending={(_?: string, files?: File[]) => {
-                return files && files.length > 0;
-              }}
             />
           </div>
           <h1>Server for OpenAI</h1>
@@ -68,20 +65,19 @@ export default function IndexPage() {
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
               introMessage="Send a chat message through NestJS backend to OpenAI. "
-              request={{url: '/api/openai-chat', additionalBodyProps: {model: 'gpt-3.5-turbo'}}}
+              request={{url: '/api/openai/chat', additionalBodyProps: {model: 'gpt-3.5-turbo'}}}
             />
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
               introMessage="Send a streamed chat message through NestJS backend to OpenAI."
-              request={{url: '/api/openai-chat-stream', additionalBodyProps: {model: 'gpt-3.5-turbo'}}}
+              request={{url: '/api/openai/chat-stream', additionalBodyProps: {model: 'gpt-3.5-turbo'}}}
               stream={true}
             />
             <DeepChat
               containerStyle={{borderRadius: '10px'}}
               introMessage="Send a 1024x1024 .png image through NestJS backend to OpenAI and generate its variation."
-              request={{url: '/api/openai-image'}}
-              images={{files: {maxNumberOfFiles: 1, acceptedFormats: '.png'}}}
-              requestBodyMessageLimits={{maxMessages: 1}}
+              request={{url: '/api/openai/image'}}
+              images={{files: {acceptedFormats: '.png'}}}
               textInput={{disabled: true, placeholder: {text: 'Send an image!'}}}
             />
           </div>

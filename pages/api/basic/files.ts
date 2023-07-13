@@ -1,31 +1,30 @@
-import {NextApiRequest, NextApiResponse} from 'next';
-import multiparty from 'multiparty';
+import {DeepChatTextRequestBody} from '../../../types/deepChatTextRequestBody';
+import {NextRequest, NextResponse} from 'next/server';
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  runtime: 'edge',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const form = new multiparty.Form();
-  await new Promise((resolve, reject) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        reject('The endpoint is set up to handle multi-part data');
+export default async function handler(req: NextRequest) {
+  try {
+    // files are stored inside form data
+    const formData = await req.formData();
+    formData.forEach((data) => {
+      if (data instanceof File) {
+        console.log('File:');
+        console.log(data);
       } else {
-        if (files?.files) {
-          console.log('Files:');
-          console.log(files);
-        }
-        if (Object.keys(fields).length > 0) {
-          console.log('Text messages:');
-          console.log(fields);
-        }
-        resolve(true);
+        // if a message is sent along with files, it will also be in form data
+        console.log('Message:');
+        console.log(data);
       }
     });
-  });
-  // Sends response back to Deep Chat using the Result format
-  res.json({result: {text: 'This is a response from Next.js server. Thank you for your message!'}});
+  } catch (_) {
+    // if no files are sent - text will be in req.json
+    const messageRequestBody = (await req.json()) as DeepChatTextRequestBody;
+    console.log(messageRequestBody);
+  }
+  // Sends response back to Deep Chat using the Result format:
+  // https://deepchat.dev/docs/connect/#Result
+  return NextResponse.json({result: {text: 'This is a response from Next.js server. Thank you for your message!'}});
 }
