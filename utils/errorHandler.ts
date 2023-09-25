@@ -1,7 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {Response} from 'deep-chat/dist/types/result';
 
-type CallbackFunc = (req: NextRequest, res: NextResponse) => Promise<NextResponse<Response>> | Promise<Response>;
+type CallbackFunc = (req: NextRequest, res: NextResponse) => Promise<NextResponse<Response>> | Promise<Response> | void;
 
 export default function errorHandler(callbacFunc: CallbackFunc) {
   return async (req: NextRequest, res: NextResponse) => {
