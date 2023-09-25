@@ -1,4 +1,5 @@
 import {DeepChatTextRequestBody} from '../../../types/deepChatTextRequestBody';
+import errorHandler from '../../../utils/errorHandler';
 import {NextRequest} from 'next/server';
 
 export const runtime = 'edge';
@@ -6,8 +7,10 @@ export const runtime = 'edge';
 // this is used to enable streaming
 export const dynamic = 'force-dynamic';
 
-export default async function handler(req: NextRequest) {
+async function handler(req: NextRequest) {
   const messageRequestBody = (await req.json()) as DeepChatTextRequestBody;
+  // Text messages are stored inside request body using the Deep Chat JSON format:
+  // https://deepchat.dev/docs/connect
   console.log(messageRequestBody);
 
   const responseStream = new TransformStream();
@@ -25,7 +28,7 @@ export default async function handler(req: NextRequest) {
   return new Response(responseStream.readable, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'Cache-Control': 'no-cache, no-transform',
     },
   });
@@ -39,9 +42,9 @@ export default async function handler(req: NextRequest) {
     setTimeout(() => {
       const chunk = responseChunks[chunkIndex];
       if (chunk) {
-        // Sends response back to Deep Chat using the Result format:
-        // https://deepchat.dev/docs/connect/#Result
-        writer.write(encoder.encode(`data: ${JSON.stringify({result: {text: `${chunk} `}})}\n\n`));
+        // Sends response back to Deep Chat using the Response format:
+        // https://deepchat.dev/docs/connect/#Response
+        writer.write(encoder.encode(`data: ${JSON.stringify({text: `${chunk} `})}\n\n`));
         sendStream(writer, encoder, responseChunks, chunkIndex + 1);
       } else {
         writer.close();
@@ -49,3 +52,5 @@ export default async function handler(req: NextRequest) {
     }, 70);
   }
 }
+
+export default errorHandler(handler);

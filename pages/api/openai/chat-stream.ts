@@ -2,13 +2,18 @@ import {DeepChatOpenAITextRequestBody} from '../../../types/deepChatTextRequestB
 import {createParser, ParsedEvent, ReconnectInterval} from 'eventsource-parser';
 import {OpenAIConverseResult} from 'deep-chat/dist/types/openAIResult';
 import {createReqChatBody} from '../../../utils/openAIChatBody';
+import errorHandler from '../../../utils/errorHandler';
 import {NextRequest} from 'next/server';
 
 export const config = {
   runtime: 'edge',
 };
 
-export default async function handler(req: NextRequest) {
+// Make sure to set the OPENAI_API_KEY environment variable
+
+async function handler(req: NextRequest) {
+  // Text messages are stored inside request body using the Deep Chat JSON format:
+  // https://deepchat.dev/docs/connect
   const textRequestBody = (await req.json()) as DeepChatOpenAITextRequestBody;
   console.log(textRequestBody);
 
@@ -17,14 +22,19 @@ export default async function handler(req: NextRequest) {
 
   const chatBody = createReqChatBody(textRequestBody, true);
 
-  const result = (await fetch('https://api.openai.com/v1/chat/completions', {
+  const result = await fetch('https://api.openai.com/v1/chat/completions', {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
     method: 'POST',
     body: JSON.stringify(chatBody),
-  })) as any;
+  });
+
+  if (!result.ok) {
+    const openAIResult = (await result.json()) as OpenAIConverseResult;
+    throw openAIResult.error?.message || 'Stream error';
+  }
 
   const readableStream = new ReadableStream({
     async start(controller) {
@@ -35,7 +45,7 @@ export default async function handler(req: NextRequest) {
             // Signal the end of the stream
             controller.enqueue(encoder.encode('[DONE]'));
           }
-          // feed the data to the TransformStream for further processing
+          // Feed the data to the TransformStream for further processing
           controller.enqueue(encoder.encode(data));
         }
       }
@@ -58,11 +68,9 @@ export default async function handler(req: NextRequest) {
       }
       const result = JSON.parse(content) as OpenAIConverseResult;
       if (result.choices[0].delta?.content) {
-        // sends response back to Deep Chat using the Result format:
-        // https://deepchat.dev/docs/connect/#Result
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({result: {text: result.choices[0].delta.content}})}\n\n`)
-        );
+        // Sends response back to Deep Chat using the Response format:
+        // https://deepchat.dev/docs/connect/#Response
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({text: result.choices[0].delta.content})}\n\n`));
       }
     },
   });
@@ -71,3 +79,5 @@ export default async function handler(req: NextRequest) {
     headers: {'Content-Type': 'text/html; charset=utf-8'},
   });
 }
+
+export default errorHandler(handler);
